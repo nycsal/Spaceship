@@ -2,139 +2,230 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>KakaReza - Space Shooter (Touch Controls)</title>
+  <title>KakaReza - Space Shooter (Mobile Touch)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
   <style>
-    body { margin:0; background:#0a0a1a; }
-    #gameContainer {
-      position:relative; width:800px; margin:30px auto;
-      border:4px solid #222; background:linear-gradient(to bottom, #111 80%, #222 100%);
-      box-shadow:0 0 40px #000a; user-select:none;
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: #0a0a1a;
+      color: #fff;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      overflow: hidden;
+      touch-action: none;
     }
-    canvas { display:block; background:transparent; }
+    #gameContainer {
+      position: relative;
+      width: 100vw;
+      max-width: 800px;
+      height: 70vw;
+      max-height: 600px;
+      margin: 0 auto;
+      background: linear-gradient(to bottom, #111 80%, #222 100%);
+      box-shadow: 0 0 40px #000a;
+      border: 4px solid #222;
+      user-select: none;
+      touch-action: none;
+      display: flex;
+      flex-direction: column;
+    }
     #scoreboard {
-      position:absolute; top:0; left:0; width:100%; padding:8px 0;
-      background:rgba(10,10,30,0.85); text-align:center; font-size:22px;
-      letter-spacing:2px; z-index:3; border-bottom:2px solid #333;
+      width: 100%;
+      padding: 8px 0;
+      background: rgba(10,10,30,0.85);
+      text-align: center;
+      font-size: 4vw;
+      letter-spacing: 2px;
+      z-index: 3;
+      border-bottom: 2px solid #333;
+      user-select: none;
+      box-sizing: border-box;
     }
     #branding {
-      font-size:28px; font-weight:bold; color:#00eaff; letter-spacing:4px;
-      text-shadow:1px 2px 6px #0ff9;
+      font-size: 5vw;
+      font-weight: bold;
+      color: #00eaff;
+      letter-spacing: 4px;
+      text-shadow: 1px 2px 6px #0ff9;
+    }
+    #gameCanvas {
+      width: 100%;
+      height: calc(100% - 8vw);
+      display: block;
+      background: transparent;
+      touch-action: none;
     }
     #gameOver, #levelComplete {
-      position:absolute; top:40%; left:50%; transform:translate(-50%,-50%);
-      background:rgba(20,30,50,0.95); padding:30px 60px; border-radius:16px;
-      font-size:32px; color:#fff; text-align:center; z-index:10; box-shadow:0 0 30px #000a; display:none;
+      position: absolute;
+      top: 40%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(20,30,50,0.95);
+      padding: 30px 60px;
+      border-radius: 16px;
+      font-size: 6vw;
+      color: #fff;
+      text-align: center;
+      z-index: 10;
+      box-shadow: 0 0 30px #000a;
+      display: none;
     }
     #gameOver button, #levelComplete button {
-      margin-top:18px; font-size:20px; padding:8px 28px; background:#00eaff;
-      color:#0a0a1a; border:none; border-radius:8px; cursor:pointer; font-weight:bold;
-      transition:background 0.2s;
+      margin-top: 18px;
+      font-size: 4vw;
+      padding: 8px 28px;
+      background: #00eaff;
+      color: #0a0a1a;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.2s;
     }
-    #gameOver button:hover, #levelComplete button:hover { background:#00b3cc; }
+    #gameOver button:hover, #levelComplete button:hover {
+      background: #00b3cc;
+    }
     #touchControls {
-      position:absolute; bottom:10px; width:100%; display:flex; justify-content:space-around;
-      z-index:5; pointer-events:none;
+      position: fixed;
+      left: 0;
+      bottom: 0;
+      width: 100vw;
+      display: flex;
+      justify-content: space-around;
+      z-index: 20;
+      pointer-events: none;
+      padding-bottom: 2vw;
     }
     .touch-btn {
-      width:80px; height:80px; background:rgba(0,234,255,0.3); border-radius:50%;
-      border:2px solid #00eaff; text-align:center; line-height:80px; font-size:40px; color:#00eaff;
-      user-select:none; pointer-events:auto; -webkit-tap-highlight-color:transparent;
-      box-shadow:0 0 15px #00eaff88; touch-action:none;
+      width: 18vw;
+      max-width: 90px;
+      height: 18vw;
+      max-height: 90px;
+      background: rgba(0,234,255,0.3);
+      border-radius: 50%;
+      border: 2px solid #00eaff;
+      text-align: center;
+      line-height: 18vw;
+      font-size: 8vw;
+      color: #00eaff;
+      user-select: none;
+      pointer-events: auto;
+      -webkit-tap-highlight-color: transparent;
+      box-shadow: 0 0 15px #00eaff88;
+      touch-action: none;
+      margin: 0 2vw;
+      transition: background 0.2s, box-shadow 0.2s;
     }
     .touch-btn:active {
-      background:rgba(0,234,255,0.6); box-shadow:0 0 25px #00eaffcc;
+      background: rgba(0,234,255,0.6);
+      box-shadow: 0 0 25px #00eaffcc;
+    }
+    @media (max-width: 600px) {
+      #gameContainer {
+        height: 90vw;
+        max-height: 90vw;
+      }
+      #scoreboard {
+        font-size: 3.5vw;
+      }
+      #branding {
+        font-size: 4.5vw;
+      }
+      #gameOver, #levelComplete {
+        font-size: 5vw;
+      }
+      .touch-btn {
+        font-size: 10vw;
+        width: 20vw;
+        height: 20vw;
+        line-height: 20vw;
+      }
     }
   </style>
 </head>
 <body>
-<div id="gameContainer">
-  <div id="scoreboard">
-    <span id="branding">KakaReza</span> | 
-    Score: <span id="score">0</span> | 
-    Time: <span id="timer">30</span>s | 
-    Level: <span id="level">1</span>
-  </div>
-  <canvas id="gameCanvas" width="800" height="600"></canvas>
-  <div id="gameOver">
-    <div id="gameOverText"></div>
-    <button onclick="restartGame()">Restart</button>
-  </div>
-  <div id="levelComplete">
-    <div id="levelCompleteText"></div>
-    <button onclick="nextLevel()">Next Level</button>
+  <div id="gameContainer">
+    <div id="scoreboard">
+      <span id="branding">KakaReza</span> | 
+      Score: <span id="score">0</span> | 
+      Time: <span id="timer">30</span>s | 
+      Level: <span id="level">1</span>
+    </div>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <div id="gameOver">
+      <div id="gameOverText"></div>
+      <button onclick="restartGame()">Restart</button>
+    </div>
+    <div id="levelComplete">
+      <div id="levelCompleteText"></div>
+      <button onclick="nextLevel()">Next Level</button>
+    </div>
   </div>
   <div id="touchControls">
     <div id="btnLeft" class="touch-btn">&#8592;</div>
     <div id="btnFire" class="touch-btn">&#128165;</div>
     <div id="btnRight" class="touch-btn">&#8594;</div>
   </div>
-</div>
 <script>
 (() => {
-  const canvas = document.getElementById('gameCanvas');
-  const ctx = canvas.getContext('2d');
-  const scoreEl = document.getElementById('score');
-  const timerEl = document.getElementById('timer');
-  const levelEl = document.getElementById('level');
-  const gameOverEl = document.getElementById('gameOver');
-  const gameOverText = document.getElementById('gameOverText');
-  const levelCompleteEl = document.getElementById('levelComplete');
-  const levelCompleteText = document.getElementById('levelCompleteText');
+  // Responsive canvas
+  function resizeCanvas() {
+    const container = document.getElementById('gameContainer');
+    const canvas = document.getElementById('gameCanvas');
+    const rect = container.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = rect.height - (container.querySelector('#scoreboard').offsetHeight || 0);
+  }
+  window.addEventListener('resize', resizeCanvas);
 
-  const GAME_WIDTH = 800, GAME_HEIGHT = 600;
-  const PLAYER_WIDTH = 60, PLAYER_HEIGHT = 38;
-  const PLAYER_SPEED = 8;
-  const BULLET_SPEED = 10;
-  const ENEMY_SPEED_BASE = 2.5;
+  // Game constants
+  const ENEMY_SPAWN_RATE_BASE = 1.2, ENEMY_SPEED_BASE = 2.5, BULLET_SPEED = 10;
+  const PLAYER_SPEED = 8, PLAYER_WIDTH = 60, PLAYER_HEIGHT = 38;
   const ENEMY_WIDTH = 48, ENEMY_HEIGHT = 36;
-  const ENEMY_SPAWN_RATE_BASE = 1.2;
-  const POWERUP_WIDTH = 32, POWERUP_HEIGHT = 32;
-  const POWERUP_FALL_SPEED = 2.2;
-  const BOSS_WIDTH = 140, BOSS_HEIGHT = 70;
-  const BOSS_BULLET_SPEED = 6;
-  const BOSS_HP = 200;
-  const LEVEL_TIME = 30;
-  const LEVELS = 5;
-  const DIFFICULTY_INCREASE = 0.10;
+  const POWERUP_WIDTH = 32, POWERUP_HEIGHT = 32, POWERUP_FALL_SPEED = 2.2;
+  const BOSS_WIDTH = 140, BOSS_HEIGHT = 70, BOSS_BULLET_SPEED = 6, BOSS_HP = 200;
+  const LEVEL_TIME = 30, LEVELS = 5, DIFFICULTY_INCREASE = 0.10;
+
+  let canvas = document.getElementById('gameCanvas'),
+      ctx = canvas.getContext('2d'),
+      scoreEl = document.getElementById('score'),
+      timerEl = document.getElementById('timer'),
+      levelEl = document.getElementById('level'),
+      gameOverEl = document.getElementById('gameOver'),
+      gameOverText = document.getElementById('gameOverText'),
+      levelCompleteEl = document.getElementById('levelComplete'),
+      levelCompleteText = document.getElementById('levelCompleteText');
 
   let keys = {};
+  let touchState = { left: false, right: false, fire: false };
   let player, bullets, enemies, powerups, boss, bossBullets;
   let score = 0, level = 1, timer = LEVEL_TIME, objectsShot = 0;
-  let lastEnemySpawn = 0, enemySpawnRate = ENEMY_SPAWN_RATE_BASE;
-  let enemySpeed = ENEMY_SPEED_BASE;
-  let canFire = true, fireInterval = 80, lastFire = 0;
-  let playerPower = 1, playerPowerTimer = 0;
-  let bossActive = false, bossDefeated = false;
-  let lastTime = 0;
-  let gameState = 'playing';
-  let touchLeft = false, touchRight = false, touchFire = false;
+  let lastEnemySpawn = 0, enemySpawnRate = ENEMY_SPAWN_RATE_BASE, enemySpeed = ENEMY_SPEED_BASE;
+  let canFire = true, fireInterval = 80, lastFire = 0, playerPower = 1, playerPowerTimer = 0;
+  let bossActive = false, bossDefeated = false, lastTime = 0, gameState = 'playing';
 
   function createPlayer() {
     return {
-      x: GAME_WIDTH / 2 - PLAYER_WIDTH / 2,
-      y: GAME_HEIGHT - PLAYER_HEIGHT - 10,
+      x: canvas.width / 2 - PLAYER_WIDTH / 2,
+      y: canvas.height - PLAYER_HEIGHT - 10,
       width: PLAYER_WIDTH,
       height: PLAYER_HEIGHT,
       power: 1,
       powerTimer: 0,
     };
   }
-
   function createBullet(x, y) {
     return { x, y, width: 6, height: 14, speed: BULLET_SPEED };
   }
-
   function createEnemy(x, y, hp = 1, hasPowerup = false, isBoss = false) {
     return { x, y, width: isBoss ? BOSS_WIDTH : ENEMY_WIDTH, height: isBoss ? BOSS_HEIGHT : ENEMY_HEIGHT, speed: enemySpeed, hp, hasPowerup, isBoss };
   }
-
   function createPowerup(x, y) {
     return { x, y, width: POWERUP_WIDTH, height: POWERUP_HEIGHT, speed: POWERUP_FALL_SPEED };
   }
-
   function createBoss() {
     return {
-      x: GAME_WIDTH / 2 - BOSS_WIDTH / 2,
+      x: canvas.width / 2 - BOSS_WIDTH / 2,
       y: 50,
       width: BOSS_WIDTH,
       height: BOSS_HEIGHT,
@@ -143,7 +234,6 @@
       fireRate: 800,
     };
   }
-
   function resetGame() {
     player = createPlayer();
     bullets = [];
@@ -168,13 +258,11 @@
     gameOverEl.style.display = 'none';
     levelCompleteEl.style.display = 'none';
   }
-
   function updateUI() {
     scoreEl.textContent = score;
     timerEl.textContent = Math.ceil(timer);
     levelEl.textContent = level;
   }
-
   function drawPlayer() {
     ctx.save();
     ctx.fillStyle = '#00eaff';
@@ -193,12 +281,10 @@
     }
     ctx.restore();
   }
-
   function drawBullet(b) {
     ctx.fillStyle = '#00ffff';
     ctx.fillRect(b.x, b.y, b.width, b.height);
   }
-
   function drawEnemy(e) {
     ctx.save();
     if (e.isBoss) {
@@ -217,7 +303,6 @@
     }
     ctx.restore();
   }
-
   function drawPowerup(p) {
     ctx.save();
     ctx.fillStyle = '#00ff00';
@@ -226,21 +311,18 @@
     ctx.fill();
     ctx.restore();
   }
-
   function drawBossBullet(b) {
     ctx.fillStyle = '#ff8800';
     ctx.beginPath();
     ctx.arc(b.x, b.y, 6, 0, Math.PI * 2);
     ctx.fill();
   }
-
   function rectsCollide(a, b) {
     return a.x < b.x + b.width &&
            a.x + a.width > b.x &&
            a.y < b.y + b.height &&
            a.y + a.height > b.y;
   }
-
   function update(delta) {
     if (gameState !== 'playing') return;
     timer -= delta / 1000;
@@ -254,10 +336,12 @@
       }
       return;
     }
-    if (keys['ArrowLeft'] || touchLeft) player.x -= PLAYER_SPEED;
-    if (keys['ArrowRight'] || touchRight) player.x += PLAYER_SPEED;
-    player.x = Math.max(0, Math.min(GAME_WIDTH - PLAYER_WIDTH, player.x));
-    if ((keys[' '] || touchFire) && canFire && performance.now() - lastFire > fireInterval) {
+    // Movement
+    if (keys['ArrowLeft'] || touchState.left) player.x -= PLAYER_SPEED;
+    if (keys['ArrowRight'] || touchState.right) player.x += PLAYER_SPEED;
+    player.x = Math.max(0, Math.min(canvas.width - PLAYER_WIDTH, player.x));
+    // Firing
+    if ((keys[' '] || touchState.fire) && canFire && performance.now() - lastFire > fireInterval) {
       fireBullet();
       lastFire = performance.now();
     }
@@ -272,11 +356,11 @@
     }
     enemies.forEach((e, i) => {
       e.y += e.speed * delta / 16;
-      if (e.y > GAME_HEIGHT) enemies.splice(i, 1);
+      if (e.y > canvas.height) enemies.splice(i, 1);
     });
     powerups.forEach((p, i) => {
       p.y += p.speed;
-      if (p.y > GAME_HEIGHT) powerups.splice(i, 1);
+      if (p.y > canvas.height) powerups.splice(i, 1);
       else if (rectsCollide(p, player)) {
         powerups.splice(i, 1);
         playerPower = Math.min(5, playerPower + 1);
@@ -322,7 +406,7 @@
     }
     bossBullets.forEach((b, i) => {
       b.y += b.speed;
-      if (b.y > GAME_HEIGHT) bossBullets.splice(i, 1);
+      if (b.y > canvas.height) bossBullets.splice(i, 1);
       else if (rectsCollide(b, player)) {
         bossBullets.splice(i, 1);
         endGame(false);
@@ -330,7 +414,6 @@
     });
     updateUI();
   }
-
   function fireBullet() {
     let bulletsCount = playerPower;
     let centerX = player.x + player.width / 2;
@@ -339,7 +422,6 @@
       bullets.push(createBullet(centerX + offset - 3, player.y));
     }
   }
-
   function spawnEnemy() {
     if (level === 3 && !bossActive && !bossDefeated) {
       boss = createBoss();
@@ -347,12 +429,11 @@
       enemies.push(boss);
       return;
     }
-    let x = Math.random() * (GAME_WIDTH - ENEMY_WIDTH);
+    let x = Math.random() * (canvas.width - ENEMY_WIDTH);
     let hp = 1;
     let hasPowerup = Math.random() < 0.15;
     enemies.push(createEnemy(x, -ENEMY_HEIGHT, hp, hasPowerup));
   }
-
   function fireBossBullet() {
     if (!boss) return;
     let centerX = boss.x + boss.width / 2;
@@ -360,13 +441,11 @@
     bossBullets.push({ x: centerX - 30, y: boss.y + boss.height, width: 12, height: 12, speed: BOSS_BULLET_SPEED });
     bossBullets.push({ x: centerX + 30, y: boss.y + boss.height, width: 12, height: 12, speed: BOSS_BULLET_SPEED });
   }
-
   function endGame(won) {
     gameState = 'gameover';
     gameOverText.textContent = won ? 'You Win! Final Score: ' + score : 'Game Over! Score: ' + score;
     gameOverEl.style.display = 'block';
   }
-
   function nextLevel() {
     if (level < LEVELS) {
       level++;
@@ -386,20 +465,17 @@
       endGame(true);
     }
   }
-
   function restartGame() {
     resetGame();
   }
-
   function draw() {
-    ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawPlayer();
     bullets.forEach(drawBullet);
     enemies.forEach(drawEnemy);
     powerups.forEach(drawPowerup);
     bossBullets.forEach(drawBossBullet);
   }
-
   function gameLoop(timestamp = 0) {
     if (!lastTime) lastTime = timestamp;
     const delta = timestamp - lastTime;
@@ -408,34 +484,31 @@
     draw();
     requestAnimationFrame(gameLoop);
   }
-
   window.addEventListener('keydown', e => {
     if (e.repeat) return;
     keys[e.key] = true;
     if (gameState === 'levelcomplete' && e.key === 'Enter') nextLevel();
     if (gameState === 'gameover' && e.key === 'Enter') restartGame();
   });
-  window.addEventListener('keyup', e => {
-    keys[e.key] = false;
-  });
-
-  const btnLeft = document.getElementById('btnLeft');
-  const btnRight = document.getElementById('btnRight');
-  const btnFire = document.getElementById('btnFire');
-
-  function setupTouchButton(btn, flagName) {
-    btn.addEventListener('touchstart', e => { e.preventDefault(); window[flagName] = true; });
-    btn.addEventListener('touchend', e => { e.preventDefault(); window[flagName] = false; });
-    btn.addEventListener('touchcancel', e => { e.preventDefault(); window[flagName] = false; });
+  window.addEventListener('keyup', e => { keys[e.key] = false; });
+  // Touch controls
+  function setupTouchButton(btn, key) {
+    btn.addEventListener('touchstart', e => { e.preventDefault(); touchState[key] = true; });
+    btn.addEventListener('touchend', e => { e.preventDefault(); touchState[key] = false; });
+    btn.addEventListener('touchcancel', e => { e.preventDefault(); touchState[key] = false; });
     btn.addEventListener('touchmove', e => { e.preventDefault(); });
   }
-  setupTouchButton(btnLeft, 'touchLeft');
-  setupTouchButton(btnRight, 'touchRight');
-  setupTouchButton(btnFire, 'touchFire');
-
-  resetGame();
-  requestAnimationFrame(gameLoop);
-
+  setupTouchButton(document.getElementById('btnLeft'), 'left');
+  setupTouchButton(document.getElementById('btnRight'), 'right');
+  setupTouchButton(document.getElementById('btnFire'), 'fire');
+  // Responsive setup
+  function startGame() {
+    resizeCanvas();
+    resetGame();
+    requestAnimationFrame(gameLoop);
+  }
+  window.addEventListener('orientationchange', () => setTimeout(resizeCanvas, 300));
+  window.addEventListener('DOMContentLoaded', startGame);
   window.restartGame = restartGame;
   window.nextLevel = nextLevel;
 })();
