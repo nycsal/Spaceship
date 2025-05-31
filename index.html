@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>KakaReza - Space Shooter (Enhanced)</title>
+  <title>KakaReza - Arcade Space Shooter</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
   <style>
     html, body {
@@ -127,8 +127,7 @@
     </div>
   </div>
 <script>
-(() => {
-  // Responsive canvas
+(function() {
   function resizeCanvas() {
     const scoreboard = document.getElementById('scoreboard');
     const canvas = document.getElementById('gameCanvas');
@@ -143,12 +142,12 @@
   window.addEventListener('resize', resizeCanvas);
 
   // Game constants
-  const ENEMY_SPAWN_RATE_BASE = 2.2, ENEMY_SPEED_BASE = 3.2, BULLET_SPEED = 10;
-  const PLAYER_SPEED = 18, PLAYER_WIDTH = 60, PLAYER_HEIGHT = 38;
+  const ENEMY_SPAWN_RATE_BASE = 2.5, ENEMY_SPEED_BASE = 3.5, BULLET_SPEED = 11;
+  const PLAYER_SPEED = 20, PLAYER_WIDTH = 60, PLAYER_HEIGHT = 38;
   const ENEMY_WIDTH = 48, ENEMY_HEIGHT = 36;
-  const POWERUP_WIDTH = 32, POWERUP_HEIGHT = 32, POWERUP_FALL_SPEED = 2.2;
-  const BOSS_WIDTH = 140, BOSS_HEIGHT = 70, BOSS_BULLET_SPEED = 6, BOSS_HP = 200;
-  const LEVEL_TIME = 30, LEVELS = 5, DIFFICULTY_INCREASE = 0.13;
+  const POWERUP_WIDTH = 32, POWERUP_HEIGHT = 32, POWERUP_FALL_SPEED = 2.5;
+  const BOSS_WIDTH = 140, BOSS_HEIGHT = 70, BOSS_BULLET_SPEED = 7, BOSS_HP = 220;
+  const LEVEL_TIME = 30, LEVELS = 5, DIFFICULTY_INCREASE = 0.16;
   const MAX_LIVES = 3;
 
   let canvas = document.getElementById('gameCanvas'),
@@ -165,9 +164,38 @@
   let player, bullets, enemies, powerups, boss, bossBullets, explosions, stars;
   let score = 0, level = 1, timer = LEVEL_TIME, objectsShot = 0, lives = MAX_LIVES;
   let lastEnemySpawn = 0, enemySpawnRate = ENEMY_SPAWN_RATE_BASE, enemySpeed = ENEMY_SPEED_BASE;
-  let fireInterval = 80, lastFire = 0, playerPower = 1, playerPowerTimer = 0;
+  let fireInterval = 70, lastFire = 0, playerPower = 1, playerPowerTimer = 0;
   let bossActive = false, bossDefeated = false, lastTime = 0, gameState = 'playing';
   let dragging = false;
+  let waveIndex = 0, waveTimer = 0;
+
+  // Patterns for enemy waves
+  const wavePatterns = [
+    // Zig-zag
+    (i, t, w, h) => ({
+      x: (w-ENEMY_WIDTH) * ((Math.sin(t/400 + i) + 1)/2),
+      y: -ENEMY_HEIGHT - i*60 + (t/2),
+      vx: 0, vy: enemySpeed
+    }),
+    // Sine wave
+    (i, t, w, h) => ({
+      x: (w-ENEMY_WIDTH)/2 + Math.sin(t/300 + i) * (w/3),
+      y: -ENEMY_HEIGHT - i*60 + (t/2),
+      vx: 0, vy: enemySpeed
+    }),
+    // V-formation
+    (i, t, w, h) => ({
+      x: (w-ENEMY_WIDTH)/2 + (i-2)*60 + Math.sin(t/600)*30,
+      y: -ENEMY_HEIGHT - Math.abs(i-2)*30 + (t/2),
+      vx: 0, vy: enemySpeed
+    }),
+    // Straight line
+    (i, t, w, h) => ({
+      x: (w-ENEMY_WIDTH)/5*i,
+      y: -ENEMY_HEIGHT - i*55 + (t/2),
+      vx: 0, vy: enemySpeed
+    }),
+  ];
 
   function createPlayer() {
     return {
@@ -178,16 +206,17 @@
       power: 1,
       powerTimer: 0,
       targetX: null,
+      shield: 0
     };
   }
   function createBullet(x, y) {
     return { x, y, width: 6, height: 14, speed: BULLET_SPEED };
   }
-  function createEnemy(x, y, hp = 1, hasPowerup = false, isBoss = false) {
-    return { x, y, width: isBoss ? BOSS_WIDTH : ENEMY_WIDTH, height: isBoss ? BOSS_HEIGHT : ENEMY_HEIGHT, speed: enemySpeed, hp, hasPowerup, isBoss };
+  function createEnemy(x, y, hp = 1, hasPowerup = false, isBoss = false, pattern=null, index=0, born=0) {
+    return { x, y, width: isBoss ? BOSS_WIDTH : ENEMY_WIDTH, height: isBoss ? BOSS_HEIGHT : ENEMY_HEIGHT, speed: enemySpeed, hp, hasPowerup, isBoss, pattern, index, born };
   }
-  function createPowerup(x, y) {
-    return { x, y, width: POWERUP_WIDTH, height: POWERUP_HEIGHT, speed: POWERUP_FALL_SPEED };
+  function createPowerup(x, y, type="power") {
+    return { x, y, width: POWERUP_WIDTH, height: POWERUP_HEIGHT, speed: POWERUP_FALL_SPEED, type };
   }
   function createBoss() {
     return {
@@ -197,7 +226,7 @@
       height: BOSS_HEIGHT,
       hp: BOSS_HP,
       fireCooldown: 0,
-      fireRate: 800,
+      fireRate: 700,
     };
   }
   function createExplosion(x, y, color="#fff") {
@@ -210,7 +239,7 @@
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height,
       r: Math.random() * 1.5 + 0.5,
-      speed: Math.random() * 0.5 + 0.2,
+      speed: Math.random() * 0.7 + 0.3,
       alpha: Math.random() * 0.5 + 0.5
     };
   }
@@ -223,7 +252,7 @@
     bossBullets = [];
     explosions = [];
     stars = [];
-    for (let i = 0; i < 80; i++) stars.push(createStar());
+    for (let i = 0; i < 100; i++) stars.push(createStar());
     score = 0;
     level = 1;
     timer = LEVEL_TIME;
@@ -238,6 +267,8 @@
     lastFire = 0;
     playerPower = 1;
     playerPowerTimer = 0;
+    waveIndex = 0;
+    waveTimer = 0;
     updateUI();
     gameOverEl.style.display = 'none';
     levelCompleteEl.style.display = 'none';
@@ -250,7 +281,7 @@
   }
   function drawPlayer() {
     ctx.save();
-    ctx.fillStyle = '#00eaff';
+    ctx.fillStyle = player.shield > 0 ? '#00ffcc' : '#00eaff';
     ctx.beginPath();
     ctx.moveTo(player.x + player.width / 2, player.y);
     ctx.lineTo(player.x + player.width, player.y + player.height);
@@ -262,6 +293,13 @@
       ctx.lineWidth = 5;
       ctx.beginPath();
       ctx.arc(player.x + player.width / 2, player.y + player.height / 2, player.width / 1.5, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    if (player.shield > 0) {
+      ctx.strokeStyle = "rgba(0,255,255,0.6)";
+      ctx.lineWidth = 7;
+      ctx.beginPath();
+      ctx.arc(player.x + player.width / 2, player.y + player.height / 2, player.width / 1.1, 0, Math.PI * 2);
       ctx.stroke();
     }
     ctx.restore();
@@ -290,7 +328,7 @@
   }
   function drawPowerup(p) {
     ctx.save();
-    ctx.fillStyle = '#00ff00';
+    ctx.fillStyle = p.type === "shield" ? "#00ffcc" : "#00ff00";
     ctx.beginPath();
     ctx.ellipse(p.x + p.width/2, p.y + p.height/2, p.width/2, p.height/2, 0, 0, Math.PI * 2);
     ctx.fill();
@@ -337,7 +375,7 @@
     if (gameState !== 'playing') return;
     timer -= delta / 1000;
     if (timer <= 0) {
-      if (level === LEVELS) {
+      if (level === 5) {
         endGame(true);
       } else {
         gameState = 'levelcomplete';
@@ -353,7 +391,7 @@
         s.x = Math.random() * canvas.width;
         s.y = 0;
         s.r = Math.random() * 1.5 + 0.5;
-        s.speed = Math.random() * 0.5 + 0.2;
+        s.speed = Math.random() * 0.7 + 0.3;
         s.alpha = Math.random() * 0.5 + 0.5;
       }
     }
@@ -374,23 +412,57 @@
       b.y -= b.speed;
       if (b.y + b.height < 0) bullets.splice(i, 1);
     });
-    lastEnemySpawn += delta / 1000;
-    if (!bossActive && lastEnemySpawn > 1 / enemySpawnRate) {
-      for (let i = 0; i < Math.ceil(level * 0.7); i++) // more enemies per spawn as level increases
-        spawnEnemy();
-      lastEnemySpawn = 0;
+    // Enemy waves
+    waveTimer += delta;
+    if (!bossActive && waveTimer > 1200) {
+      let pattern = wavePatterns[waveIndex % wavePatterns.length];
+      for (let i = 0; i < Math.min(5, 2+Math.floor(level/2)); i++) {
+        let pos = pattern(i, Date.now(), canvas.width, canvas.height);
+        let hasPowerup = Math.random() < 0.09;
+        let type = Math.random() < 0.2 ? "shield" : "power";
+        enemies.push(createEnemy(pos.x, pos.y, 1, hasPowerup, false, pattern, i, Date.now()));
+      }
+      waveIndex++;
+      waveTimer = 0;
     }
+    // Mini-boss every 2 levels (not level 3, which is big boss)
+    if ((level % 2 === 0 && !bossActive && !bossDefeated && Math.random() < 0.005 && level !== 3)) {
+      let x = canvas.width/2 - ENEMY_WIDTH/2;
+      enemies.push(createEnemy(x, 0, 10+level*5, true, false, null, 0, Date.now()));
+    }
+    // Level 3: Big Boss
+    if (level === 3 && !bossActive && !bossDefeated) {
+      boss = createBoss();
+      bossActive = true;
+      enemies.push(boss);
+    }
+    // Update enemies
     enemies.forEach((e, i) => {
-      e.y += e.speed * delta / 16;
+      if (e.isBoss) return;
+      if (e.pattern) {
+        let pos = e.pattern(e.index, Date.now()-e.born, canvas.width, canvas.height);
+        e.x = pos.x;
+        e.y = pos.y;
+      } else {
+        e.y += e.speed * delta / 16;
+      }
       if (e.y > canvas.height) enemies.splice(i, 1);
+      // Enemy shooting
+      if (Math.random() < 0.0025 * level && !e.isBoss) {
+        bossBullets.push({ x: e.x + e.width/2, y: e.y + e.height, width: 10, height: 10, speed: 4+level });
+      }
     });
     powerups.forEach((p, i) => {
       p.y += p.speed;
       if (p.y > canvas.height) powerups.splice(i, 1);
       else if (rectsCollide(p, player)) {
         powerups.splice(i, 1);
-        playerPower = Math.min(5, playerPower + 1);
-        playerPowerTimer = 6000;
+        if (p.type === "shield") {
+          player.shield = 400; // frames
+        } else {
+          playerPower = Math.min(5, playerPower + 1);
+          playerPowerTimer = 6000;
+        }
       }
     });
     if (playerPowerTimer > 0) {
@@ -399,6 +471,7 @@
         playerPower = 1;
       }
     }
+    if (player.shield > 0) player.shield--;
     // Bullet vs enemy
     bullets.forEach((b, bi) => {
       enemies.forEach((e, ei) => {
@@ -417,7 +490,8 @@
               score += 10;
               objectsShot += 1;
               if (e.hasPowerup) {
-                powerups.push(createPowerup(e.x + e.width/2 - POWERUP_WIDTH/2, e.y + e.height));
+                let type = Math.random() < 0.5 ? "power" : "shield";
+                powerups.push(createPowerup(e.x + e.width/2 - POWERUP_WIDTH/2, e.y + e.height, type));
               }
               enemies.splice(ei, 1);
             }
@@ -430,6 +504,7 @@
       if (!e.isBoss && rectsCollide(e, player)) {
         explosions.push(createExplosion(player.x + player.width/2, player.y + player.height/2, "#00eaff"));
         enemies.splice(ei, 1);
+        if (player.shield > 0) return;
         lives--;
         updateUI();
         if (lives <= 0) endGame(false);
@@ -448,6 +523,7 @@
       else if (rectsCollide(b, player)) {
         bossBullets.splice(i, 1);
         explosions.push(createExplosion(player.x + player.width/2, player.y + player.height/2, "#ff4444"));
+        if (player.shield > 0) return;
         lives--;
         updateUI();
         if (lives <= 0) endGame(false);
@@ -469,18 +545,6 @@
       let offset = (i - (bulletsCount - 1) / 2) * 10;
       bullets.push(createBullet(centerX + offset - 3, player.y));
     }
-  }
-  function spawnEnemy() {
-    if (level === 3 && !bossActive && !bossDefeated) {
-      boss = createBoss();
-      bossActive = true;
-      enemies.push(boss);
-      return;
-    }
-    let x = Math.random() * (canvas.width - ENEMY_WIDTH);
-    let hp = 1;
-    let hasPowerup = Math.random() < 0.15;
-    enemies.push(createEnemy(x, -ENEMY_HEIGHT, hp, hasPowerup));
   }
   function fireBossBullet() {
     if (!boss) return;
@@ -507,6 +571,8 @@
       bullets = [];
       bossBullets = [];
       explosions = [];
+      waveIndex = 0;
+      waveTimer = 0;
       gameState = 'playing';
       levelCompleteEl.style.display = 'none';
       updateUI();
@@ -535,7 +601,6 @@
     draw();
     requestAnimationFrame(gameLoop);
   }
-  // Touch drag controls
   function isInBottomArea(touchY) {
     return touchY > canvas.height * 0.67;
   }
@@ -570,7 +635,6 @@
     dragging = false;
     player.targetX = null;
   });
-  // Also support mouse drag for desktop
   canvas.addEventListener('mousedown', function(e) {
     let rect = canvas.getBoundingClientRect();
     let mx = (e.clientX - rect.left) * (canvas.width / rect.width);
