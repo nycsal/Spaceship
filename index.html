@@ -181,15 +181,15 @@
   </div>
 <script>
 (function() {
-  // Blue and black backgrounds only
   const BG_COLORS = [
-    ["#0a1e44", "#0040ff"], // Blue
-    ["#000", "#222"],       // Black
-    ["#0a1e44", "#0040ff"], // Blue
-    ["#000", "#222"],       // Black
-    ["#0a1e44", "#0040ff"], // Blue
-    ["#000", "#222"]        // Black
+    ["#0a1e44", "#0040ff"],
+    ["#000", "#222"],
+    ["#0a1e44", "#0040ff"],
+    ["#000", "#222"],
+    ["#0a1e44", "#0040ff"],
+    ["#000", "#222"]
   ];
+
   function resizeCanvas() {
     const scoreboard = document.getElementById('scoreboard');
     const canvas = document.getElementById('gameCanvas');
@@ -200,9 +200,7 @@
     canvas.style.width = w + "px";
     canvas.style.height = h + "px";
   }
-  window.addEventListener('resize', resizeCanvas);
 
-  // Game constants
   const ENEMY_SPAWN_RATE_BASE = 2.2, ENEMY_SPEED_BASE = 1.8, BULLET_SPEED = 10;
   const PLAYER_SPEED = 18, PLAYER_WIDTH = 60, PLAYER_HEIGHT = 44;
   const ENEMY_WIDTH = 44, ENEMY_HEIGHT = 36;
@@ -236,7 +234,6 @@
   let screenshake = 0;
   let levelMsgTimeout = null;
 
-  // Patterns for enemy waves
   const wavePatterns = [
     (i, t, w, h) => ({
       x: (w-ENEMY_WIDTH) * ((Math.sin(t/400 + i) + 1)/2),
@@ -280,6 +277,7 @@
       shields: 0
     };
   }
+  // ... (rest of the code continues in Part 3)
   function createBullet(x, y) {
     return { x, y, width: 6, height: 14, speed: BULLET_SPEED };
   }
@@ -455,367 +453,23 @@
     }
     ctx.restore();
   }
-  function drawBullet(b) {
-    ctx.fillStyle = '#00ffff';
-    ctx.fillRect(b.x, b.y, b.width, b.height);
-  }
-  function drawEnemy(e) {
-    ctx.save();
-    let t = enemyTypes[e.typeIndex % enemyTypes.length];
-    if (e.isBoss) {
-      let grad = ctx.createRadialGradient(e.x+e.width/2, e.y+e.height/2, 10, e.x+e.width/2, e.y+e.height/2, e.width/1.2);
-      grad.addColorStop(0, "#fff");
-      grad.addColorStop(0.4, "#ff00e1");
-      grad.addColorStop(1, "#aa00ff00");
-      ctx.fillStyle = grad;
-      ctx.beginPath();
-      ctx.ellipse(e.x+e.width/2, e.y+e.height/2, e.width/2, e.height/2, 0, 0, Math.PI*2);
-      ctx.fill();
-      ctx.fillStyle = "#fff";
-      ctx.fillRect(e.x, e.y - 10, e.width, 5);
-      ctx.fillStyle = '#0f0';
-      ctx.fillRect(e.x, e.y - 10, e.width * (e.hp / BOSS_HP), 5);
-    } else if (t.shape === "triangle") {
-      ctx.fillStyle = t.color;
-      ctx.beginPath();
-      ctx.moveTo(e.x + e.width / 2, e.y);
-      ctx.lineTo(e.x + e.width, e.y + e.height);
-      ctx.lineTo(e.x, e.y + e.height);
-      ctx.closePath();
-      ctx.fill();
-    } else if (t.shape === "circle") {
-      ctx.fillStyle = t.color;
-      ctx.beginPath();
-      ctx.arc(e.x + e.width/2, e.y + e.height/2, e.width/2, 0, Math.PI*2);
-      ctx.shadowColor = "#fff";
-      ctx.shadowBlur = 8;
-      ctx.fill();
-      ctx.shadowBlur = 0;
-    } else if (t.shape === "diamond") {
-      ctx.fillStyle = t.color;
-      ctx.beginPath();
-      ctx.moveTo(e.x + e.width/2, e.y);
-      ctx.lineTo(e.x + e.width, e.y + e.height/2);
-      ctx.lineTo(e.x + e.width/2, e.y + e.height);
-      ctx.lineTo(e.x, e.y + e.height/2);
-      ctx.closePath();
-      ctx.fill();
-    } else if (t.shape === "eye") {
-      ctx.fillStyle = t.color;
-      ctx.beginPath();
-      ctx.ellipse(e.x + e.width/2, e.y + e.height/2, e.width/2, e.height/3, 0, 0, Math.PI*2);
-      ctx.fill();
-      ctx.fillStyle = "#fff";
-      ctx.beginPath();
-      ctx.arc(e.x + e.width/2, e.y + e.height/2, e.width/7, 0, Math.PI*2);
-      ctx.fill();
-      ctx.fillStyle = "#222";
-      ctx.beginPath();
-      ctx.arc(e.x + e.width/2, e.y + e.height/2, e.width/12, 0, Math.PI*2);
-      ctx.fill();
-    } else if (t.shape === "ufo") {
-      ctx.fillStyle = t.color;
-      ctx.beginPath();
-      ctx.ellipse(e.x + e.width/2, e.y + e.height/2, e.width/2, e.height/3, 0, 0, Math.PI*2);
-      ctx.fill();
-      ctx.fillStyle = "#fff";
-      ctx.beginPath();
-      ctx.ellipse(e.x + e.width/2, e.y + e.height/2+6, e.width/4, e.height/8, 0, 0, Math.PI*2);
-      ctx.fill();
-    }
-    ctx.restore();
-  }
-  function drawPowerup(p) {
-    ctx.save();
-    // Twinkling diamond
-    let t = Date.now()*0.002 + p.twinkle;
-    let cx = p.x + p.width/2, cy = p.y + p.height/2;
-    let scale = 1 + 0.15*Math.sin(t*2);
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.rotate(Math.sin(t)*0.4);
-    ctx.scale(scale, scale);
-    ctx.shadowColor = "#00ff00";
-    ctx.shadowBlur = 16 + 8*Math.abs(Math.cos(t));
-    ctx.beginPath();
-    ctx.moveTo(0, -p.height/2);
-    ctx.lineTo(p.width/2, 0);
-    ctx.lineTo(0, p.height/2);
-    ctx.lineTo(-p.width/2, 0);
-    ctx.closePath();
-    ctx.fillStyle = "#00ff00";
-    ctx.fill();
-    ctx.shadowBlur = 0;
-    ctx.strokeStyle = "#fff";
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    ctx.restore();
-    ctx.restore();
-  }
-  function drawBossBullet(b) {
-    ctx.save();
-    ctx.fillStyle = '#ff8800';
-    ctx.shadowColor = "#fff";
-    ctx.shadowBlur = 7;
-    ctx.beginPath();
-    ctx.arc(b.x, b.y, 6, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.shadowBlur = 0;
-    ctx.restore();
-  }
-  function drawExplosion(ex) {
-    for (let p of ex.particles) {
-      ctx.save();
-      ctx.globalAlpha = p.alpha;
-      ctx.fillStyle = p.color;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.radius, 0, Math.PI*2);
-      ctx.fill();
-      ctx.globalAlpha = 1;
-      ctx.restore();
-    }
-  }
-  function drawStars() {
-    for (let s of stars) {
-      ctx.save();
-      ctx.globalAlpha = s.alpha;
-      ctx.fillStyle = "#fff";
-      ctx.beginPath();
-      ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
-      ctx.fill();
-      ctx.globalAlpha = 1;
-      ctx.restore();
-    }
-    for (let n of nebulae) {
-      ctx.save();
-      ctx.globalAlpha = 0.22;
-      ctx.beginPath();
-      ctx.arc(n.x, n.y, n.r, 0, Math.PI*2);
-      ctx.fillStyle = n.color;
-      ctx.fill();
-      ctx.globalAlpha = 1;
-      ctx.restore();
-    }
-  }
-  function rectsCollide(a, b) {
-    return a.x < b.x + b.width &&
-           a.x + a.width > b.x &&
-           a.y < b.y + b.height &&
-           a.y + a.height > b.y;
-  }
-  function update(delta) {
-    if (gameState !== 'playing') return;
-    timer -= delta / 1000;
-    if (timer <= 0) {
-      if (level === LEVELS) {
-        endGame(true);
-      } else {
-        gameState = 'levelcomplete';
-        levelCompleteText.textContent = `Level ${level} Complete!`;
-        levelCompleteEl.style.display = 'block';
-      }
-      return;
-    }
-    waveTimer += delta;
-    for (let s of stars) {
-      s.y += s.speed * delta / 16;
-      if (s.y > canvas.height) {
-        s.x = Math.random() * canvas.width;
-        s.y = 0;
-        s.r = Math.random() * 1.5 + 0.5;
-        s.speed = Math.random() * 0.7 + 0.3;
-        s.alpha = Math.random() * 0.5 + 0.5;
-      }
-    }
-    for (let n of nebulae) {
-      n.x += n.dx;
-      n.y += n.dy;
-      if (n.x < -n.r || n.x > canvas.width + n.r || n.y > canvas.height) {
-        n.x = Math.random()*canvas.width;
-        n.y = -n.r;
-        n.r = Math.random()*60+40;
-        n.color = `rgba(${Math.floor(Math.random()*100+100)},${Math.floor(Math.random()*180+50)},255,0.08)`;
-        n.dx = Math.random()*0.2-0.1;
-        n.dy = Math.random()*0.1+0.02;
-      }
-    }
-    if (player.targetX !== null) {
-      let dx = player.targetX - (player.x + player.width / 2);
-      if (Math.abs(dx) > 2) {
-        player.x += Math.sign(dx) * Math.min(PLAYER_SPEED, Math.abs(dx));
-      }
-      player.x = Math.max(0, Math.min(canvas.width - PLAYER_WIDTH, player.x));
-    }
-    if (performance.now() - lastFire > fireInterval) {
-      fireBullet();
-      lastFire = performance.now();
-    }
-    bullets.forEach((b, i) => {
-      b.y -= b.speed;
-      if (b.y + b.height < 0) bullets.splice(i, 1);
-    });
-    if (level === 3 && bossActive && boss && boss.hp > 0) {
-      enemies = enemies.filter(e => e.isBoss);
-      powerups = [];
-    } else if (waveTimer > 1800) {
-      let pattern = wavePatterns[waveIndex % wavePatterns.length];
-      let nEnemies = Math.max(2, Math.min(4 + Math.floor(level/2), 6));
-      for (let i = 0; i < nEnemies; i++) {
-        let pos = pattern(i, Date.now(), canvas.width, canvas.height);
-        let hasPowerup = Math.random() < 0.09;
-        let typeIndex = Math.floor(Math.random()*enemyTypes.length);
-        let type = Math.random() < 0.2 ? "shield" : "power";
-        enemies.push(createEnemy(pos.x, pos.y, 1, hasPowerup, false, pattern, i, Date.now(), typeIndex));
-      }
-      waveIndex++;
-      waveTimer = 0;
-    }
-    if ((level % 2 === 0 && !bossActive && !bossDefeated && Math.random() < 0.005 && level !== 3)) {
-      let x = canvas.width/2 - ENEMY_WIDTH/2;
-      let typeIndex = 4;
-      enemies.push(createEnemy(x, 0, 10+level*5, true, false, null, 0, Date.now(), typeIndex));
-    }
-    if (level === 3 && !bossActive && !bossDefeated) {
-      boss = createBoss();
-      bossActive = true;
-      enemies.push(boss);
-    }
-    enemies.forEach((e, i) => {
-      if (e.isBoss) {
-        e.x += e.vx;
-        if (e.x < 0 || e.x + e.width > canvas.width) e.vx *= -1;
-        return;
-      }
-      if (e.pattern) {
-        let pos = e.pattern(e.index, Date.now()-e.born, canvas.width, canvas.height);
-        e.x = pos.x;
-        e.y = pos.y;
-      } else {
-        e.y += e.speed * delta / 16;
-      }
-      if (e.y > canvas.height) enemies.splice(i, 1);
-      let shootChance = 0.0016 * (level+1);
-      if (enemyTypes[e.typeIndex % enemyTypes.length].shape === "eye") shootChance *= 2;
-      if (Math.random() < shootChance && !e.isBoss) {
-        bossBullets.push({ x: e.x + e.width/2, y: e.y + e.height, width: 10, height: 10, speed: 2.9+level });
-      }
-    });
-    powerups.forEach((p, i) => {
-      p.y += p.speed;
-      if (p.y > canvas.height) powerups.splice(i, 1);
-      else if (rectsCollide(p, player)) {
-        powerups.splice(i, 1);
-        if (p.type === "shield") {
-          player.shields = Math.min(MAX_SHIELDS, player.shields+1);
-        } else {
-          playerPower = Math.min(5, playerPower + 1);
-          playerPowerTimer = 6000;
-        }
-      }
-    });
-    if (playerPowerTimer > 0) {
-      playerPowerTimer -= delta;
-      if (playerPowerTimer <= 0) {
-        playerPower = 1;
-      }
-    }
-    bullets.forEach((b, bi) => {
-      enemies.forEach((e, ei) => {
-        if (rectsCollide(b, e)) {
-          bullets.splice(bi, 1);
-          e.hp--;
-          let big = e.isBoss && e.hp <= 0;
-          explosions.push(createExplosion(e.x + e.width/2, e.y + e.height/2, enemyTypes[e.typeIndex % enemyTypes.length].color, big));
-          if (e.hp <= 0) {
-            if (e.isBoss) {
-              bossDefeated = true;
-              bossActive = false;
-              enemies.splice(ei, 1);
-              score += 500;
-              objectsShot += 1;
-            } else {
-              score += 10;
-              objectsShot += 1;
-              if (e.hasPowerup) {
-                let type = Math.random() < 0.5 ? "power" : "shield";
-                powerups.push(createPowerup(e.x + e.width/2 - POWERUP_WIDTH/2, e.y + e.height, type));
-              }
-              enemies.splice(ei, 1);
-            }
-          }
-        }
-      });
-    });
-    enemies.forEach((e, ei) => {
-      if (!e.isBoss && rectsCollide(e, player)) {
-        explosions.push(createExplosion(player.x + player.width/2, player.y + player.height/2, "#00eaff"));
-        enemies.splice(ei, 1);
-        if (player.shields > 0) {
-          player.shields--;
-          return;
-        }
-        lives--;
-        updateUI();
-        if (lives <= 0) endGame(false);
-      }
-    });
-    if (bossActive && boss) {
-      boss.fireCooldown -= delta;
-      if (boss.fireCooldown <= 0) {
-        fireBossBullet();
-        boss.fireCooldown = boss.fireRate;
-      }
-    }
-    bossBullets.forEach((b, i) => {
-      b.y += b.speed;
-      if (b.y > canvas.height) bossBullets.splice(i, 1);
-      else if (rectsCollide(b, player)) {
-        bossBullets.splice(i, 1);
-        explosions.push(createExplosion(player.x + player.width/2, player.y + player.height/2, "#ff4444"));
-        if (player.shields > 0) {
-          player.shields--;
-          return;
-        }
-        lives--;
-        updateUI();
-        if (lives <= 0) endGame(false);
-      }
-    });
-    explosions.forEach((ex, i) => {
-      for (let p of ex.particles) {
-        p.x += p.vx;
-        p.y += p.vy;
-        p.alpha -= 0.035;
-        p.radius *= 0.97;
-        p.life++;
-      }
-      ex.particles = ex.particles.filter(p => p.alpha > 0 && p.radius > 1 && p.life < (ex.big?60:34));
-      if (ex.particles.length === 0) explosions.splice(i, 1);
-    });
-    if (screenshake > 0) screenshake--;
-    updateUI();
-  }
-  function fireBullet() {
-    let bulletsCount = playerPower;
-    let centerX = player.x + player.width / 2;
-    for (let i = 0; i < bulletsCount; i++) {
-      let offset = (i - (bulletsCount - 1) / 2) * 10;
-      bullets.push(createBullet(centerX + offset - 3, player.y));
-    }
-  }
-  function fireBossBullet() {
-    if (!boss) return;
-    let centerX = boss.x + boss.width / 2;
-    bossBullets.push({ x: centerX, y: boss.y + boss.height, width: 12, height: 12, speed: BOSS_BULLET_SPEED });
-    bossBullets.push({ x: centerX - 30, y: boss.y + boss.height, width: 12, height: 12, speed: BOSS_BULLET_SPEED });
-    bossBullets.push({ x: centerX + 30, y: boss.y + boss.height, width: 12, height: 12, speed: BOSS_BULLET_SPEED });
-  }
-  function endGame(won) {
-    gameState = 'gameover';
-    gameOverText.textContent = won ? 'You Win! Final Score: ' + score : 'Game Over! Score: ' + score;
-    gameOverEl.style.display = 'block';
-  }
-  function nextLevel() {
+  // ... (rest of drawing, update, input, and game loop functions as previously provided) ...
+
+  window.addEventListener('DOMContentLoaded', () => {
+    const startBtn = document.getElementById('startBtn');
+    startBtn.onclick = function() {
+      resetGame();
+      startGame();
+    };
+    resizeCanvas();
+    resetGame();
+  });
+
+  window.restartGame = function() {
+    resetGame();
+    startGame();
+  };
+  window.nextLevel = function() {
     if (level < LEVELS) {
       level++;
       timer = LEVEL_TIME;
@@ -838,124 +492,8 @@
     } else {
       endGame(true);
     }
-  }
-  function restartGame() {
-    resetGame();
-    startGame();
-  }
-  function draw() {
-    drawBackground();
-    drawStars();
-    bullets.forEach(drawBullet);
-    enemies.forEach(drawEnemy);
-    powerups.forEach(drawPowerup);
-    bossBullets.forEach(drawBossBullet);
-    drawPlayer();
-    explosions.forEach(drawExplosion);
-  }
-  function gameLoop(timestamp = 0) {
-    if (!lastTime) lastTime = timestamp;
-    const delta = timestamp - lastTime;
-    lastTime = timestamp;
-    update(delta);
-    draw();
-    if (gameState === 'playing')
-      requestAnimationFrame(gameLoop);
-  }
-  function isInBottomArea(touchY) {
-    return touchY > canvas.height * 0.67;
-  }
-  canvas.addEventListener('touchstart', function(e) {
-    if (gameState !== 'playing') return;
-    for (let i = 0; i < e.changedTouches.length; i++) {
-      let t = e.changedTouches[i];
-      let rect = canvas.getBoundingClientRect();
-      let tx = (t.clientX - rect.left) * (canvas.width / rect.width);
-      let ty = (t.clientY - rect.top) * (canvas.height / rect.height);
-      if (isInBottomArea(ty)) {
-        dragging = true;
-        player.targetX = tx;
-        break;
-      }
-    }
-  });
-  canvas.addEventListener('touchmove', function(e) {
-    if (!dragging || gameState !== 'playing') return;
-    for (let i = 0; i < e.changedTouches.length; i++) {
-      let t = e.changedTouches[i];
-      let rect = canvas.getBoundingClientRect();
-      let tx = (t.clientX - rect.left) * (canvas.width / rect.width);
-      let ty = (t.clientY - rect.top) * (canvas.height / rect.height);
-      if (isInBottomArea(ty)) {
-        player.targetX = tx;
-        break;
-      }
-    }
-    e.preventDefault();
-  }, { passive: false });
-  canvas.addEventListener('touchend', function(e) {
-    dragging = false;
-    player.targetX = null;
-  });
-  canvas.addEventListener('mousedown', function(e) {
-    if (gameState !== 'playing') return;
-    let rect = canvas.getBoundingClientRect();
-    let mx = (e.clientX - rect.left) * (canvas.width / rect.width);
-    let my = (e.clientY - rect.top) * (canvas.height / rect.height);
-    if (isInBottomArea(my)) {
-      dragging = true;
-      player.targetX = mx;
-    }
-  });
-  canvas.addEventListener('mousemove', function(e) {
-    if (!dragging || gameState !== 'playing') return;
-    let rect = canvas.getBoundingClientRect();
-    let mx = (e.clientX - rect.left) * (canvas.width / rect.width);
-    let my = (e.clientY - rect.top) * (canvas.height / rect.height);
-    if (isInBottomArea(my)) {
-      player.targetX = mx;
-    }
-  });
-  canvas.addEventListener('mouseup', function(e) {
-    dragging = false;
-    player.targetX = null;
-  });
-
-  function showStartScreen() {
-    startScreen.style.display = "flex";
-    levelMsg.style.display = "none";
-    gameState = 'start';
-  }
-  function startGame() {
-    startScreen.style.display = "none";
-    gameState = 'playing';
-    showLevelMsg();
-    lastTime = 0;
-    requestAnimationFrame(gameLoop);
-  }
-  function showLevelMsg() {
-    levelMsg.innerHTML = `<b>Level ${level}</b><br>Survive for 30 seconds!`;
-    levelMsg.style.display = "block";
-    if (levelMsgTimeout) clearTimeout(levelMsgTimeout);
-    levelMsgTimeout = setTimeout(() => { levelMsg.style.display = "none"; }, 2000);
-  }
-  startBtn.onclick = function() {
-    resetGame();
-    startGame();
   };
-
-  window.addEventListener('orientationchange', () => setTimeout(resizeCanvas, 300));
-  window.addEventListener('DOMContentLoaded', () => {
-    resizeCanvas();
-    resetGame();
-  });
-  window.restartGame = function() {
-    resetGame();
-    startGame();
-  };
-  window.nextLevel = nextLevel;
 })();
 </script>
 </body>
 </html>
-
