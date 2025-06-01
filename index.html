@@ -208,9 +208,10 @@
   ];
 
   function createPlayer() {
+    // Place player as low as possible (5px from bottom)
     return {
       x: canvas.width / 2 - PLAYER_WIDTH / 2,
-      y: canvas.height - PLAYER_HEIGHT - 10,
+      y: canvas.height - PLAYER_HEIGHT - 5,
       width: PLAYER_WIDTH,
       height: PLAYER_HEIGHT,
       power: 1,
@@ -525,6 +526,9 @@
       }
       return;
     }
+    // Always increment waveTimer
+    waveTimer += delta;
+
     for (let s of stars) {
       s.y += s.speed * delta / 16;
       if (s.y > canvas.height) {
@@ -777,7 +781,8 @@
     requestAnimationFrame(gameLoop);
   }
   function isInBottomArea(touchY) {
-    return touchY > canvas.height * 0.67;
+    // Only the bottom 25% of the screen is for ship control
+    return touchY > canvas.height * 0.75;
   }
   canvas.addEventListener('touchstart', function(e) {
     for (let i = 0; i < e.changedTouches.length; i++) {
