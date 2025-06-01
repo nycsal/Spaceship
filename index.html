@@ -131,7 +131,6 @@
     </div>
   </div>
 <script>
-// --- GAME CODE START ---
 (function() {
   function resizeCanvas() {
     const scoreboard = document.getElementById('scoreboard');
@@ -564,12 +563,12 @@
       if (b.y + b.height < 0) bullets.splice(i, 1);
     });
 
-    // === BOSS FIGHT ISOLATION LOGIC ===
+    // --- FIXED BOSS FIGHT ISOLATION LOGIC ---
     if (level === 3 && bossActive && boss && boss.hp > 0) {
       enemies = enemies.filter(e => e.isBoss);
       powerups = [];
       waveTimer = 0;
-    } else if ((!bossActive || (bossActive && boss && boss.hp > 0)) && waveTimer > 1300) {
+    } else if (waveTimer > 1300) {
       let pattern = wavePatterns[waveIndex % wavePatterns.length];
       let nEnemies = Math.min(6, 2+Math.floor(level/2));
       for (let i = 0; i < nEnemies; i++) {
@@ -582,6 +581,7 @@
       waveIndex++;
       waveTimer = 0;
     }
+    // Mini-boss every 2 levels (not level 3, which is big boss)
     if ((level % 2 === 0 && !bossActive && !bossDefeated && Math.random() < 0.005 && level !== 3)) {
       let x = canvas.width/2 - ENEMY_WIDTH/2;
       let typeIndex = 4;
@@ -843,7 +843,6 @@
   window.restartGame = restartGame;
   window.nextLevel = nextLevel;
 })();
-// --- GAME CODE END ---
 </script>
 </body>
 </html>
