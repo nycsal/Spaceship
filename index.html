@@ -841,6 +841,7 @@
   }
   function restartGame() {
     resetGame();
+    startGame();
   }
   function draw() {
     drawBackground();
@@ -858,7 +859,8 @@
     lastTime = timestamp;
     update(delta);
     draw();
-    requestAnimationFrame(gameLoop);
+    if (gameState === 'playing')
+      requestAnimationFrame(gameLoop);
   }
   function isInBottomArea(touchY) {
     return touchY > canvas.height * 0.67;
