@@ -131,6 +131,7 @@
     </div>
   </div>
 <script>
+// --- GAME CODE START ---
 (function() {
   function resizeCanvas() {
     const scoreboard = document.getElementById('scoreboard');
@@ -177,25 +178,21 @@
 
   // Patterns for enemy waves
   const wavePatterns = [
-    // Zig-zag
     (i, t, w, h) => ({
       x: (w-ENEMY_WIDTH) * ((Math.sin(t/400 + i) + 1)/2),
       y: -ENEMY_HEIGHT - i*60 + (t/2),
       vx: 0, vy: enemySpeed
     }),
-    // Sine wave
     (i, t, w, h) => ({
       x: (w-ENEMY_WIDTH)/2 + Math.sin(t/300 + i) * (w/3),
       y: -ENEMY_HEIGHT - i*60 + (t/2),
       vx: 0, vy: enemySpeed
     }),
-    // V-formation
     (i, t, w, h) => ({
       x: (w-ENEMY_WIDTH)/2 + (i-2)*60 + Math.sin(t/600)*30,
       y: -ENEMY_HEIGHT - Math.abs(i-2)*30 + (t/2),
       vx: 0, vy: enemySpeed
     }),
-    // Straight line
     (i, t, w, h) => ({
       x: (w-ENEMY_WIDTH)/5*i,
       y: -ENEMY_HEIGHT - i*55 + (t/2),
@@ -203,13 +200,12 @@
     }),
   ];
 
-  // Different enemy types
   const enemyTypes = [
-    { color: "#ff5555", shape: "triangle" }, // classic
-    { color: "#ffcc00", shape: "circle" },   // powerup carrier
-    { color: "#00eaff", shape: "diamond" },  // fast
-    { color: "#eaff00", shape: "eye" },      // shoots more
-    { color: "#ff00e1", shape: "ufo" },      // special
+    { color: "#ff5555", shape: "triangle" },
+    { color: "#ffcc00", shape: "circle" },
+    { color: "#00eaff", shape: "diamond" },
+    { color: "#eaff00", shape: "eye" },
+    { color: "#ff00e1", shape: "ufo" },
   ];
 
   function createPlayer() {
@@ -221,7 +217,7 @@
       power: 1,
       powerTimer: 0,
       targetX: null,
-      shields: 0 // number of shield layers
+      shields: 0
     };
   }
   function createBullet(x, y) {
@@ -248,7 +244,6 @@
     };
   }
   function createExplosion(x, y, color="#fff", big=false) {
-    // Multi-stage explosion: several particles
     let particles = [];
     let n = big ? 40 : Math.floor(Math.random()*5+12);
     for (let i=0; i<n; i++) {
@@ -282,7 +277,6 @@
     };
   }
   function createNebula() {
-    // Animated nebula/aurora
     return {
       x: Math.random()*canvas.width,
       y: Math.random()*canvas.height*0.7,
@@ -329,10 +323,9 @@
     scoreEl.textContent = score;
     timerEl.textContent = Math.ceil(timer);
     levelEl.textContent = level;
-    // Blue hearts for lives, cyan shields for outer circles
     let shields = "";
     for (let i=0; i<player.shields; i++) shields += "&#128994;";
-    livesEl.innerHTML = "&#128153;".repeat(lives) + shields; // blue hearts + cyan circles
+    livesEl.innerHTML = "&#128153;".repeat(lives) + shields;
   }
   function drawPlayer() {
     ctx.save();
@@ -343,7 +336,6 @@
     ctx.lineTo(player.x, player.y + player.height);
     ctx.closePath();
     ctx.fill();
-    // Draw shield layers
     for (let i=0; i<player.shields; i++) {
       ctx.save();
       ctx.strokeStyle = `rgba(0,255,255,${0.22 + 0.22*i})`;
@@ -370,7 +362,6 @@
     ctx.save();
     let t = enemyTypes[e.typeIndex % enemyTypes.length];
     if (e.isBoss) {
-      // Boss: big glowing UFO, moves side to side
       let grad = ctx.createRadialGradient(e.x+e.width/2, e.y+e.height/2, 10, e.x+e.width/2, e.y+e.height/2, e.width/1.2);
       grad.addColorStop(0, "#fff");
       grad.addColorStop(0.4, "#ff00e1");
@@ -446,7 +437,6 @@
       ctx.arc(p.x + p.width/2, p.y + p.height/2, p.width/3, 0, Math.PI*2);
       ctx.stroke();
     } else {
-      // Power: diamond with glow
       ctx.save();
       ctx.shadowColor = "#00ff00";
       ctx.shadowBlur = 16;
@@ -506,7 +496,6 @@
       ctx.globalAlpha = 1;
       ctx.restore();
     }
-    // Nebulae/aurora
     for (let n of nebulae) {
       ctx.save();
       ctx.globalAlpha = 0.22;
@@ -537,7 +526,6 @@
       }
       return;
     }
-    // Animate stars/nebulae
     for (let s of stars) {
       s.y += s.speed * delta / 16;
       if (s.y > canvas.height) {
@@ -560,7 +548,6 @@
         n.dy = Math.random()*0.1+0.02;
       }
     }
-    // Touch drag movement
     if (player.targetX !== null) {
       let dx = player.targetX - (player.x + player.width / 2);
       if (Math.abs(dx) > 2) {
@@ -568,7 +555,6 @@
       }
       player.x = Math.max(0, Math.min(canvas.width - PLAYER_WIDTH, player.x));
     }
-    // Firing (always continuous)
     if (performance.now() - lastFire > fireInterval) {
       fireBullet();
       lastFire = performance.now();
@@ -577,9 +563,13 @@
       b.y -= b.speed;
       if (b.y + b.height < 0) bullets.splice(i, 1);
     });
-    // Enemy waves
-    waveTimer += delta;
-    if ((!bossActive || (bossActive && boss && boss.hp > 0)) && waveTimer > 1300) {
+
+    // === BOSS FIGHT ISOLATION LOGIC ===
+    if (level === 3 && bossActive && boss && boss.hp > 0) {
+      enemies = enemies.filter(e => e.isBoss);
+      powerups = [];
+      waveTimer = 0;
+    } else if ((!bossActive || (bossActive && boss && boss.hp > 0)) && waveTimer > 1300) {
       let pattern = wavePatterns[waveIndex % wavePatterns.length];
       let nEnemies = Math.min(6, 2+Math.floor(level/2));
       for (let i = 0; i < nEnemies; i++) {
@@ -592,22 +582,18 @@
       waveIndex++;
       waveTimer = 0;
     }
-    // Mini-boss every 2 levels (not level 3, which is big boss)
     if ((level % 2 === 0 && !bossActive && !bossDefeated && Math.random() < 0.005 && level !== 3)) {
       let x = canvas.width/2 - ENEMY_WIDTH/2;
       let typeIndex = 4;
       enemies.push(createEnemy(x, 0, 10+level*5, true, false, null, 0, Date.now(), typeIndex));
     }
-    // Level 3: Big Boss
     if (level === 3 && !bossActive && !bossDefeated) {
       boss = createBoss();
       bossActive = true;
       enemies.push(boss);
     }
-    // Update enemies
     enemies.forEach((e, i) => {
       if (e.isBoss) {
-        // Boss moves side to side
         e.x += e.vx;
         if (e.x < 0 || e.x + e.width > canvas.width) e.vx *= -1;
         return;
@@ -620,7 +606,6 @@
         e.y += e.speed * delta / 16;
       }
       if (e.y > canvas.height) enemies.splice(i, 1);
-      // Enemy shooting
       let shootChance = 0.002 * (level+1);
       if (enemyTypes[e.typeIndex % enemyTypes.length].shape === "eye") shootChance *= 2;
       if (Math.random() < shootChance && !e.isBoss) {
@@ -646,7 +631,6 @@
         playerPower = 1;
       }
     }
-    // Bullet vs enemy
     bullets.forEach((b, bi) => {
       enemies.forEach((e, ei) => {
         if (rectsCollide(b, e)) {
@@ -674,7 +658,6 @@
         }
       });
     });
-    // Enemy hits player
     enemies.forEach((e, ei) => {
       if (!e.isBoss && rectsCollide(e, player)) {
         explosions.push(createExplosion(player.x + player.width/2, player.y + player.height/2, "#00eaff"));
@@ -710,7 +693,6 @@
         if (lives <= 0) endGame(false);
       }
     });
-    // Animate explosions
     explosions.forEach((ex, i) => {
       for (let p of ex.particles) {
         p.x += p.vx;
@@ -861,6 +843,7 @@
   window.restartGame = restartGame;
   window.nextLevel = nextLevel;
 })();
+// --- GAME CODE END ---
 </script>
 </body>
 </html>
